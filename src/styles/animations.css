@@ -1,0 +1,548 @@
+/**
+ * Animation Configuration
+ * Centralized CSS custom properties for consistent animations across the application
+ * Includes support for prefers-reduced-motion accessibility
+ */
+
+:root {
+  /* ===== TIMING FUNCTIONS ===== */
+  --ease-out-cubic: cubic-bezier(0.215, 0.61, 0.355, 1);
+  --ease-in-out-cubic: cubic-bezier(0.645, 0.045, 0.355, 1);
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+  --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+  --ease-spring: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  /* ===== DURATION VALUES ===== */
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-medium: 350ms;
+  --duration-slow: 500ms;
+  --duration-slower: 750ms;
+
+  /* ===== SIDEBAR ANIMATIONS ===== */
+  --sidebar-transition-duration: var(--duration-medium);
+  --sidebar-transition-timing: var(--ease-out-quart);
+  --sidebar-width-transition: width var(--sidebar-transition-duration) var(--sidebar-transition-timing);
+  --sidebar-transform-transition: transform var(--duration-normal) var(--ease-out-cubic);
+
+  /* ===== HOVER ANIMATIONS ===== */
+  --hover-transition-duration: var(--duration-fast);
+  --hover-transition-timing: var(--ease-out-cubic);
+  --hover-scale: 1.02;
+  --hover-translate-x: 4px;
+  --hover-translate-y: -2px;
+
+  /* ===== BUTTON ANIMATIONS ===== */
+  --button-transition: all var(--duration-fast) var(--ease-out-cubic);
+  --button-hover-scale: 1.05;
+  --button-active-scale: 0.98;
+  --button-focus-scale: 1.02;
+
+  /* ===== THEME TRANSITION ===== */
+  --theme-transition-duration: var(--duration-medium);
+  --theme-transition-timing: var(--ease-out-cubic);
+  --theme-transition: background-color var(--theme-transition-duration) var(--theme-transition-timing),
+                      color var(--theme-transition-duration) var(--theme-transition-timing),
+                      border-color var(--theme-transition-duration) var(--theme-transition-timing);
+
+  /* ===== LOADING ANIMATIONS ===== */
+  --loading-fade-duration: var(--duration-normal);
+  --loading-fade-timing: var(--ease-out-cubic);
+  --loading-slide-duration: var(--duration-medium);
+  --loading-slide-timing: var(--ease-out-quart);
+
+  /* ===== SCROLL ANIMATIONS ===== */
+  --scroll-behavior: smooth;
+  --scrollbar-transition: opacity var(--duration-normal) var(--ease-out-cubic);
+
+  /* ===== Z-INDEX LAYERS ===== */
+  /* Base layers */
+  --z-index-base: 1;
+  --z-index-content: 10;
+  --z-index-elevated: 100;
+  
+  /* Interactive elements */
+  --z-index-dropdown: 1000;
+  --z-index-sticky: 1020;
+  --z-index-fixed: 1030;
+  --z-index-overlay: 1035;
+  --z-index-modal-backdrop: 1040;
+  --z-index-modal: 1050;
+  --z-index-popover: 1060;
+  --z-index-tooltip: 1070;
+  --z-index-toast: 1080;
+  --z-index-notification: 1090;
+  
+  /* Maximum priority elements */
+  --z-index-debug: 9999;
+
+  /* ===== SHADOW ANIMATIONS ===== */
+  --shadow-transition: box-shadow var(--duration-normal) var(--ease-out-cubic);
+  --shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --shadow-focus: 0 0 0 3px rgba(var(--v-theme-primary), 0.2);
+  --shadow-active: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  /* ===== RESPONSIVE BREAKPOINT ANIMATIONS ===== */
+  --responsive-transition-duration: var(--duration-medium);
+  --responsive-transition-timing: var(--ease-out-quart);
+  --responsive-layout-transition: margin var(--responsive-transition-duration) var(--responsive-transition-timing),
+                                  padding var(--responsive-transition-duration) var(--responsive-transition-timing),
+                                  width var(--responsive-transition-duration) var(--responsive-transition-timing);
+}
+
+/* ===== REDUCED MOTION SUPPORT ===== */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    /* Reduce all animation durations for accessibility */
+    --duration-fast: 50ms;
+    --duration-normal: 100ms;
+    --duration-medium: 150ms;
+    --duration-slow: 200ms;
+    --duration-slower: 250ms;
+    
+    /* Disable transforms and complex animations */
+    --hover-scale: 1;
+    --hover-translate-x: 0;
+    --hover-translate-y: 0;
+    --button-hover-scale: 1;
+    --button-active-scale: 1;
+    --button-focus-scale: 1;
+    
+    /* Keep essential transitions but make them faster */
+    --sidebar-transition-duration: var(--duration-fast);
+    --theme-transition-duration: var(--duration-fast);
+    --loading-fade-duration: var(--duration-fast);
+    --loading-slide-duration: var(--duration-normal);
+    --responsive-transition-duration: var(--duration-fast);
+  }
+  
+  /* Disable scroll behavior for reduced motion */
+  * {
+    scroll-behavior: auto !important;
+  }
+  
+  /* Disable all transforms and complex animations */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transform: none !important;
+  }
+  
+  /* Keep essential transitions for usability */
+  .v-btn,
+  .v-list-item,
+  .v-navigation-drawer,
+  .v-app-bar,
+  .v-main,
+  .v-footer {
+    transition: background-color var(--duration-fast) ease,
+                color var(--duration-fast) ease,
+                opacity var(--duration-fast) ease !important;
+  }
+}
+
+/* ===== UTILITY ANIMATION CLASSES ===== */
+
+/* Fade animations */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity var(--loading-fade-duration) var(--loading-fade-timing);
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* Slide animations */
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: transform var(--loading-slide-duration) var(--loading-slide-timing),
+              opacity var(--loading-fade-duration) var(--loading-fade-timing);
+}
+
+.slide-up-enter-from {
+  transform: translateY(20px);
+  opacity: 0;
+}
+
+.slide-up-leave-to {
+  transform: translateY(-20px);
+  opacity: 0;
+}
+
+.slide-right-enter-active,
+.slide-right-leave-active {
+  transition: transform var(--loading-slide-duration) var(--loading-slide-timing),
+              opacity var(--loading-fade-duration) var(--loading-fade-timing);
+}
+
+.slide-right-enter-from {
+  transform: translateX(-20px);
+  opacity: 0;
+}
+
+.slide-right-leave-to {
+  transform: translateX(20px);
+  opacity: 0;
+}
+
+/* Scale animations */
+.scale-enter-active,
+.scale-leave-active {
+  transition: transform var(--duration-normal) var(--ease-spring),
+              opacity var(--loading-fade-duration) var(--loading-fade-timing);
+}
+
+.scale-enter-from {
+  transform: scale(0.9);
+  opacity: 0;
+}
+
+.scale-leave-to {
+  transform: scale(1.1);
+  opacity: 0;
+}
+
+/* Hover enhancement classes */
+.hover-lift {
+  transition: transform var(--hover-transition-duration) var(--hover-transition-timing),
+              box-shadow var(--shadow-transition);
+}
+
+.hover-lift:hover {
+  transform: translateY(var(--hover-translate-y));
+  box-shadow: var(--shadow-hover);
+}
+
+.hover-slide {
+  transition: transform var(--hover-transition-duration) var(--hover-transition-timing);
+}
+
+.hover-slide:hover {
+  transform: translateX(var(--hover-translate-x));
+}
+
+.hover-scale {
+  transition: transform var(--hover-transition-duration) var(--hover-transition-timing);
+}
+
+.hover-scale:hover {
+  transform: scale(var(--hover-scale));
+}
+
+/* Focus states */
+.focus-ring {
+  transition: box-shadow var(--duration-fast) var(--ease-out-cubic);
+}
+
+.focus-ring:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+/* Smooth scrolling */
+.smooth-scroll {
+  scroll-behavior: var(--scroll-behavior);
+}
+
+/* GPU acceleration for smooth animations */
+.gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Loading states */
+.loading-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(var(--v-theme-surface), 0.1) 25%,
+    rgba(var(--v-theme-surface), 0.3) 50%,
+    rgba(var(--v-theme-surface), 0.1) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Pulse animation for loading indicators */
+.loading-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Bounce animation for notifications */
+.bounce-in {
+  animation: bounceIn var(--duration-slow) var(--ease-spring);
+}
+
+@keyframes bounceIn {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Stagger animation delays for lists */
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+.stagger-5 { animation-delay: 0.5s; }
+
+/* ===== ENHANCED LOADING AND STATE TRANSITION ANIMATIONS ===== */
+
+/* Spinning loader animation */
+.loading-spinner {
+  animation: spin var(--duration-slow) linear infinite;
+  will-change: transform;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Dots loading animation */
+.loading-dots {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.loading-dots::before,
+.loading-dots::after,
+.loading-dots {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: currentColor;
+  animation: loadingDots 1.4s ease-in-out infinite both;
+}
+
+.loading-dots::before {
+  animation-delay: -0.32s;
+}
+
+.loading-dots::after {
+  animation-delay: -0.16s;
+}
+
+@keyframes loadingDots {
+  0%, 80%, 100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* State transition animations */
+.state-loading {
+  position: relative;
+  pointer-events: none;
+  opacity: 0.7;
+  transition: opacity var(--duration-normal) var(--ease-out-cubic);
+}
+
+.state-loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin var(--duration-slow) linear infinite;
+  z-index: var(--z-index-tooltip);
+}
+
+.state-error {
+  border-color: rgb(var(--v-theme-error)) !important;
+  background-color: rgba(var(--v-theme-error), 0.05) !important;
+  animation: shake var(--duration-medium) ease-in-out;
+}
+
+.state-success {
+  border-color: rgb(var(--v-theme-success)) !important;
+  background-color: rgba(var(--v-theme-success), 0.05) !important;
+  animation: successPulse var(--duration-medium) var(--ease-spring);
+}
+
+.state-warning {
+  border-color: rgb(var(--v-theme-warning)) !important;
+  background-color: rgba(var(--v-theme-warning), 0.05) !important;
+  animation: warningBlink var(--duration-slow) ease-in-out 2;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+  20%, 40%, 60%, 80% { transform: translateX(2px); }
+}
+
+@keyframes successPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes warningBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Theme transition animations */
+.theme-transition {
+  transition: background-color var(--theme-transition-duration) var(--theme-transition-timing),
+              color var(--theme-transition-duration) var(--theme-transition-timing),
+              border-color var(--theme-transition-duration) var(--theme-transition-timing),
+              box-shadow var(--theme-transition-duration) var(--theme-transition-timing);
+}
+
+/* Component mount/unmount animations */
+.component-enter {
+  opacity: 0;
+  transform: translateY(var(--spacing-md, 16px)) scale(0.95);
+}
+
+.component-enter-active {
+  transition: opacity var(--duration-normal) var(--ease-out-cubic),
+              transform var(--duration-normal) var(--ease-spring);
+}
+
+.component-enter-to {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.component-leave {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.component-leave-active {
+  transition: opacity var(--duration-fast) var(--ease-out-cubic),
+              transform var(--duration-fast) var(--ease-out-cubic);
+}
+
+.component-leave-to {
+  opacity: 0;
+  transform: translateY(-8px) scale(0.95);
+}
+
+/* Progress bar animation */
+.progress-bar {
+  position: relative;
+  overflow: hidden;
+  background-color: rgba(var(--v-theme-primary), 0.1);
+  border-radius: 4px;
+}
+
+.progress-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(var(--v-theme-primary), 0.4),
+    transparent
+  );
+  animation: progressShimmer 2s infinite;
+}
+
+@keyframes progressShimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* Skeleton loading animation */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(var(--v-theme-surface-variant), 0.1) 25%,
+    rgba(var(--v-theme-surface-variant), 0.3) 50%,
+    rgba(var(--v-theme-surface-variant), 0.1) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s ease-in-out infinite;
+  border-radius: 4px;
+}
+
+@keyframes skeletonShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Enhanced reduced motion support for new animations */
+@media (prefers-reduced-motion: reduce) {
+  .loading-spinner,
+  .loading-dots,
+  .loading-dots::before,
+  .loading-dots::after,
+  .state-loading::after,
+  .state-error,
+  .state-success,
+  .state-warning,
+  .progress-bar::after,
+  .skeleton {
+    animation: none !important;
+  }
+  
+  .theme-transition,
+  .component-enter-active,
+  .component-leave-active {
+    transition: none !important;
+  }
+  
+  .state-loading {
+    opacity: 0.8;
+  }
+  
+  .state-loading::after {
+    display: none;
+  }
+}
