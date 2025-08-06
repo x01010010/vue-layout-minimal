@@ -8,15 +8,6 @@ const routes: RouteRecordRaw[] = [
     component: () => import('../views/HomeView.vue')
   },
   {
-    path: '/api-builder',
-    name: 'ApiBuilder',
-    component: () => import('../views/ApiBuilderView.vue'),
-    meta: {
-      title: 'API Builder',
-      requiresAuth: false
-    }
-  },
-  {
     path: '/project-creation',
     name: 'ProjectCreation',
     component: () => import('../views/ProjectCreationView.vue'),

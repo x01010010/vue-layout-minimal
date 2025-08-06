@@ -20,25 +20,11 @@
         </ul>
       </v-card-text>
     </v-card>
-    
-    <v-card class="mt-4">
-      <v-card-title>API Builder</v-card-title>
-      <v-card-text>
-        <p>Build and test REST API requests with our sophisticated form builder.</p>
-        <v-btn 
-          color="primary" 
-          :to="{ name: 'ApiBuilder' }"
-          class="mt-2"
-        >
-          Open API Builder
-        </v-btn>
-      </v-card-text>
-    </v-card>
   </v-container>
 </template>
 
 <script setup lang="ts">
-// Home view component - displays welcome content and navigation to API Builder
+// Home view component - displays welcome content and layout information
 </script>
 
 <style scoped>
