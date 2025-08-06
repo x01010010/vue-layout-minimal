@@ -26,6 +26,7 @@ export default createVuetify({
           info: '#2196F3',
           success: '#4CAF50',
           warning: '#FFC107',
+          'surface-variant': '#E7E0EC',
         },
       },
       dark: {
@@ -37,6 +38,7 @@ export default createVuetify({
           info: '#2196F3',
           success: '#4CAF50',
           warning: '#FFC107',
+          'surface-variant': '#49454F',
         },
       },
     },

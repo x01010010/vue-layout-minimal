@@ -1,6 +1,6 @@
 <template>
   <div class="app-sidebar">
-    <!-- Hamburger Menu Toggle -->
+    <!-- Sidebar Menu Toggle -->
     <div class="sidebar-menu-toggle">
       <v-btn
         :icon="menuToggleIcon"
@@ -56,11 +56,58 @@
         </v-list>
       </slot>
     </div>
+
+    <!-- Bottom Menu Section: Items positioned at bottom -->
+    <div class="sidebar-bottom-menu">
+      <slot name="sidebar-bottom-menu">
+        <v-list nav>
+          <template v-for="item in bottomMenuItems" :key="item.id">
+            <!-- Bottom menu items with children (expandable) -->
+            <v-list-group
+              v-if="item.children"
+              :value="item.id"
+              :model-value="item.isExpanded"
+              @update:model-value="(value: boolean) => toggleMenuGroup(item, value)"
+            >
+              <template #activator="{ props }">
+                <v-list-item
+                  v-bind="props"
+                  :prepend-icon="item.icon"
+                  :title="item.title"
+                  class="menu-item-parent"
+                  @click="handleParentItemClick(item)"
+                />
+              </template>
+              
+              <!-- Child menu items -->
+              <v-list-item
+                v-for="child in item.children"
+                :key="child.id"
+                :prepend-icon="child.icon"
+                :title="child.title"
+                class="menu-item-child"
+                @click="child.action?.()"
+              />
+            </v-list-group>
+            
+            <!-- Single bottom menu items (no children) -->
+            <v-list-item
+              v-else
+              :prepend-icon="item.icon"
+              :title="item.title"
+              class="menu-item-single"
+              @click="item.action?.()"
+            />
+          </template>
+        </v-list>
+      </slot>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import type { SidebarProps, SidebarEmits, MenuItem } from '@/types/sidebar'
 
 // Component props
@@ -71,12 +118,15 @@ const props = withDefaults(defineProps<SidebarProps>(), {
 // Component emits
 const emit = defineEmits<SidebarEmits & { 'menu-toggle': [] }>()
 
+// Vue Router instance
+const router = useRouter()
+
 // Computed property for dynamic menu toggle icon
 const menuToggleIcon = computed(() => {
   return props.sidebarState === 'expanded' ? 'mdi-minus' : 'mdi-plus'
 })
 
-// Menu data structure
+// Menu data structure - main menu items
 const menuItems = ref<MenuItem[]>([
   {
     id: 'dashboard',
@@ -85,57 +135,23 @@ const menuItems = ref<MenuItem[]>([
     action: () => handleMenuClick('dashboard')
   },
   {
-    id: 'components',
-    title: 'Components',
-    icon: 'mdi-puzzle',
+    id: 'dbt-cloud',
+    title: 'dbt Cloud',
+    icon: 'mdi-cloud',
     isExpanded: false,
     children: [
       {
-        id: 'buttons',
-        title: 'Buttons',
-        icon: 'mdi-gesture-tap-button',
-        action: () => handleMenuClick('buttons')
-      },
-      {
-        id: 'forms',
-        title: 'Forms',
-        icon: 'mdi-form-select',
-        action: () => handleMenuClick('forms')
-      },
-      {
-        id: 'tables',
-        title: 'Tables',
-        icon: 'mdi-table',
-        action: () => handleMenuClick('tables')
+        id: 'new-project',
+        title: 'New Project',
+        icon: 'mdi-plus',
+        action: () => handleMenuClick('new-project')
       }
     ]
-  },
-  {
-    id: 'pages',
-    title: 'Pages',
-    icon: 'mdi-file-document-multiple',
-    isExpanded: false,
-    children: [
-      {
-        id: 'about',
-        title: 'About',
-        icon: 'mdi-information',
-        action: () => handleMenuClick('about')
-      },
-      {
-        id: 'contact',
-        title: 'Contact',
-        icon: 'mdi-email',
-        action: () => handleMenuClick('contact')
-      },
-      {
-        id: 'help',
-        title: 'Help',
-        icon: 'mdi-help-circle',
-        action: () => handleMenuClick('help')
-      }
-    ]
-  },
+  }
+])
+
+// Bottom menu items - items that should be positioned at the bottom
+const bottomMenuItems = ref<MenuItem[]>([
   {
     id: 'settings',
     title: 'Settings',
@@ -144,10 +160,24 @@ const menuItems = ref<MenuItem[]>([
   }
 ])
 
-// Menu click handler (placeholder for now)
+// Menu click handler with navigation logic
 const handleMenuClick = (itemId: string): void => {
   console.log(`Menu item clicked: ${itemId}`)
-  // TODO: Implement actual navigation logic
+  
+  // Handle specific navigation routes
+  switch (itemId) {
+    case 'new-project':
+      router.push('/project-creation')
+      break
+    case 'dashboard':
+      router.push('/')
+      break
+    case 'dbt-cloud':
+      console.log('dbt Cloud menu item clicked')
+      break
+    default:
+      console.log(`No navigation defined for: ${itemId}`)
+  }
 }
 
 // Menu toggle handler
@@ -241,6 +271,13 @@ watch(() => props.sidebarState, (newState) => {
   flex: 1 1 auto;
   overflow-y: auto;
   padding: 8px 0;
+}
+
+.sidebar-bottom-menu {
+  flex: 0 0 auto;
+  padding: 8px 0;
+  border-top: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  margin-top: auto;
 }
 
 

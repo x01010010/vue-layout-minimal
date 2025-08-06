@@ -27,6 +27,14 @@ const routes: RouteRecordRaw[] = [
       title: 'Create New Project',
       requiresAuth: false
     }
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: () => import('../views/NotFoundView.vue'),
+    meta: {
+      title: 'Page Not Found'
+    }
   }
 ]
 
