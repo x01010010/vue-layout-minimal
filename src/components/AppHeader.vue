@@ -1,14 +1,14 @@
 <template>
   <div class="app-header" :class="{ 'theme-transition': true, 'state-loading': isLoading }">
-    <!-- Left Section: Menu Toggle -->
+    <!-- Left Section: Logo placeholder and App Name -->
     <div class="header-left">
-      <v-btn
-        icon="mdi-menu"
-        variant="text"
-        @click="handleMenuToggle"
-        :aria-label="menuToggleLabel"
-        :disabled="isLoading"
+      <v-icon
+        icon="mdi-hexagon"
+        size="32"
+        color="primary"
+        class="logo-placeholder"
       />
+      <span class="app-name">App Name</span>
     </div>
 
     <!-- Center Section: Application Title with Loading Demo -->
@@ -54,19 +54,16 @@ import { useTheme } from '../composables/useTheme';
 // TypeScript interfaces for header component
 interface HeaderProps {
   title?: string;
-  menuToggleLabel?: string;
   userLabel?: string;
 }
 
 interface HeaderEvents {
-  'menu-toggle': [];
   'user-click': [];
 }
 
 // Component props with defaults
 const props = withDefaults(defineProps<HeaderProps>(), {
   title: 'Vue Layout Minimal',
-  menuToggleLabel: 'Toggle navigation menu',
   userLabel: 'User account menu'
 });
 
@@ -109,10 +106,6 @@ const themeToggleLabel = computed(() => {
 });
 
 // Event handlers
-const handleMenuToggle = (): void => {
-  emit('menu-toggle');
-};
-
 const handleThemeToggle = async (): Promise<void> => {
   // Demonstrate loading state during theme change
   isLoading.value = true;
@@ -161,6 +154,12 @@ const toggleLoadingDemo = (): void => {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
+  gap: 12px;
+  padding-left: 16px;
+}
+
+.logo-placeholder {
+  transition: var(--theme-transition);
 }
 
 .header-center {
@@ -177,6 +176,12 @@ const toggleLoadingDemo = (): void => {
   /* margin-left: auto; */ /* This is no longer needed with space-between */
 }
 
+.app-name {
+  font-weight: 600;
+  font-size: 1.125rem;
+  color: rgb(var(--v-theme-primary));
+}
+
 .app-title {
   font-weight: 500;
   font-size: 1.25rem;
@@ -184,8 +189,19 @@ const toggleLoadingDemo = (): void => {
   transition: var(--theme-transition);
 }
 
+.header-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+}
+
 /* Desktop responsive styling */
 @media (min-width: 960px) {
+  .app-name {
+    font-size: 1.25rem;
+  }
+  
   .app-title {
     font-size: 1.375rem;
   }

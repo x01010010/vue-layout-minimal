@@ -106,3 +106,9 @@ dist/
 # Vite
 .vite/
 dist
+
+.DS_Store
+# Mac system files
+*.swp
+*.swo
+src/.DS_Store

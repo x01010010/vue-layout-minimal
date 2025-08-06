@@ -1,13 +1,12 @@
 <template>
   <AppLayout
-    :sidebar-visible="layoutState.sidebarVisible.value"
-    :sidebar-width="layoutState.sidebarWidth.value"
-    :sidebar-state="layoutState.sidebarState.value"
+    :sidebar-visible="layoutStore.sidebarVisible"
+    :sidebar-width="layoutStore.sidebarWidth"
+    :sidebar-state="layoutStore.sidebarState"
   >
     <!-- Header Slot -->
     <template #header>
       <AppHeader
-        @menu-toggle="handleMenuToggle"
         @user-click="handleUserClick"
       />
     </template>
@@ -25,7 +24,8 @@
     <template #sidebar-menu>
       <!-- Main menu using AppSidebar component -->
       <AppSidebar
-        :sidebar-state="layoutState.sidebarState.value"
+        :sidebar-state="layoutStore.sidebarState"
+        @menu-toggle="handleMenuToggle"
         @menu-item-click="handleSidebarMenuClick"
         @menu-expand="handleSidebarMenuExpand"
         @menu-collapse="handleSidebarMenuCollapse"
@@ -104,21 +104,30 @@ import AppHeader from './components/AppHeader.vue'
 import AppSidebar from './components/AppSidebar.vue'
 import AppMainContent from './components/AppMainContent.vue'
 import AppFooter from './components/AppFooter.vue'
-import { useLayoutState } from './composables/useLayoutState'
+import { useLayoutStore } from './stores/layout'
 import { useTheme } from './composables/useTheme'
 import type { MenuItem } from './types/sidebar'
 import type { FooterLink } from './types/footer'
+import { onMounted, onUnmounted } from 'vue'
 
 // Initialize layout state management
-const layoutState: ReturnType<typeof useLayoutState> = useLayoutState();
+const layoutStore = useLayoutStore();
 
 // Initialize theme management
 const themeState = useTheme();
 
+onMounted(() => {
+  layoutStore.initializeLayout();
+})
+
+onUnmounted(() => {
+  layoutStore.cleanupLayout();
+})
+
 // Header event handlers
 const handleMenuToggle = (): void => {
   console.log('Menu toggle clicked - toggling sidebar');
-  layoutState.toggleSidebar();
+  layoutStore.toggleSidebar();
 };
 
 
@@ -148,7 +157,7 @@ const handleSidebarMenuCollapse = (item: MenuItem): void => {
 const handleParentClickCollapsed = (item: MenuItem): void => {
   console.log('Parent item clicked in collapsed state:', item);
   // Automatically expand the sidebar when parent item is clicked in collapsed state
-  layoutState.setSidebarState('expanded');
+  layoutStore.setSidebarState('expanded');
   console.log('Sidebar automatically expanded due to parent item click');
 };
 

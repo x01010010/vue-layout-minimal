@@ -1,17 +1,14 @@
 <template>
   <div class="app-sidebar">
-    <!-- Top Section: Logo/Branding Area -->
-    <div class="sidebar-top">
-      <slot name="sidebar-top">
-        <v-list-item class="sidebar-brand">
-          <template #prepend>
-            <v-icon icon="mdi-view-dashboard" size="large" color="primary"></v-icon>
-          </template>
-          <v-list-item-title class="text-h6 font-weight-bold">
-            App Name
-          </v-list-item-title>
-        </v-list-item>
-      </slot>
+    <!-- Hamburger Menu Toggle -->
+    <div class="sidebar-menu-toggle">
+      <v-btn
+        icon="mdi-menu"
+        variant="text"
+        @click="handleMenuToggle"
+        aria-label="Toggle navigation menu"
+        class="menu-toggle-btn"
+      />
     </div>
 
     <!-- Menu Section: Navigation Menu -->
@@ -72,7 +69,7 @@ const props = withDefaults(defineProps<SidebarProps>(), {
 })
 
 // Component emits
-const emit = defineEmits<SidebarEmits>()
+const emit = defineEmits<SidebarEmits & { 'menu-toggle': [] }>()
 
 // Menu data structure
 const menuItems = ref<MenuItem[]>([
@@ -148,6 +145,11 @@ const handleMenuClick = (itemId: string): void => {
   // TODO: Implement actual navigation logic
 }
 
+// Menu toggle handler
+const handleMenuToggle = (): void => {
+  emit('menu-toggle')
+}
+
 // Toggle menu group expand/collapse
 const toggleMenuGroup = (item: MenuItem, isExpanded: boolean): void => {
   item.isExpanded = isExpanded
@@ -193,19 +195,23 @@ watch(() => props.sidebarState, (newState) => {
   height: 100%;
 }
 
-.sidebar-top {
+.sidebar-menu-toggle {
   flex: 0 0 auto;
+  padding: 8px;
   border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
 }
 
-.sidebar-brand {
-  padding: 16px;
-  transition: background-color 0.2s ease;
+.menu-toggle-btn {
+  transition: var(--button-transition),
+              transform var(--duration-normal) var(--ease-spring);
 }
 
-.sidebar-brand:hover {
-  background-color: rgba(var(--v-theme-primary), 0.04);
+.menu-toggle-btn:hover {
+  transform: scale(var(--button-hover-scale)) rotate(90deg);
+  background-color: rgba(var(--v-theme-primary), 0.08);
 }
+
+
 
 .sidebar-menu {
   flex: 1 1 auto;
@@ -217,10 +223,6 @@ watch(() => props.sidebarState, (newState) => {
 /* ===== Z-INDEX LAYERING FOR SIDEBAR ELEMENTS ===== */
 
 /* Sidebar sections should have proper layering */
-.sidebar-top {
-  position: relative;
-  z-index: var(--z-index-elevated);
-}
 
 .sidebar-menu {
   position: relative;
@@ -241,11 +243,6 @@ watch(() => props.sidebarState, (newState) => {
   z-index: var(--z-index-dropdown);
 }
 
-/* Brand/logo should be prominent */
-.sidebar-brand {
-  position: relative;
-  z-index: var(--z-index-elevated);
-}
 
 /* ===== ENHANCED MENU ITEM ANIMATIONS ===== */
 
