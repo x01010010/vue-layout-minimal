@@ -3,7 +3,7 @@
     <!-- Hamburger Menu Toggle -->
     <div class="sidebar-menu-toggle">
       <v-btn
-        icon="mdi-menu"
+        :icon="menuToggleIcon"
         variant="text"
         @click="handleMenuToggle"
         aria-label="Toggle navigation menu"
@@ -70,6 +70,11 @@ const props = withDefaults(defineProps<SidebarProps>(), {
 
 // Component emits
 const emit = defineEmits<SidebarEmits & { 'menu-toggle': [] }>()
+
+// Computed property for dynamic menu toggle icon
+const menuToggleIcon = computed(() => {
+  return props.sidebarState === 'expanded' ? 'mdi-minus' : 'mdi-plus'
+})
 
 // Menu data structure
 const menuItems = ref<MenuItem[]>([
@@ -209,6 +214,25 @@ watch(() => props.sidebarState, (newState) => {
 .menu-toggle-btn:hover {
   transform: scale(var(--button-hover-scale)) rotate(90deg);
   background-color: rgba(var(--v-theme-primary), 0.08);
+}
+
+/* Enhanced icon transition for plus/minus transformation */
+.menu-toggle-btn :deep(.v-icon) {
+  transition: transform var(--duration-medium) var(--ease-out-cubic),
+              opacity var(--duration-fast) var(--ease-out-cubic),
+              color var(--duration-normal) var(--ease-out-cubic);
+}
+
+/* Icon state-specific animations */
+.menu-toggle-btn:hover :deep(.v-icon) {
+  color: rgb(var(--v-theme-primary));
+  transform: scale(1.1);
+}
+
+/* Smooth icon change animation */
+.menu-toggle-btn :deep(.v-icon) {
+  will-change: transform, opacity;
+  transform: translateZ(0);
 }
 
 

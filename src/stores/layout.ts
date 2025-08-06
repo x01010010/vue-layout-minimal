@@ -27,8 +27,8 @@ export const useLayoutStore = defineStore('layout', () => {
   const config = reactive<LayoutConfig>(DEFAULT_CONFIG);
 
   const state = reactive<LayoutState>({
-    sidebarState: 'expanded',
-    sidebarWidth: config.sidebar.expandedWidth,
+    sidebarState: 'collapsed',
+    sidebarWidth: config.sidebar.collapsedWidth,
     sidebarVisible: true,
     currentBreakpoint: 'desktop',
     isMobile: false,
