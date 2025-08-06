@@ -1,7 +1,7 @@
 <template>
   <div class="main-content-wrapper">
     <!-- Primary Content Area -->
-    <div class="main-content-area" :class="{ 'with-aside': showAside }">
+    <div class="main-content-area">
       <div class="content-scrollable" ref="contentScrollRef">
         <slot name="main-content">
           <!-- Default content if no slot provided -->
@@ -56,60 +56,6 @@
         </slot>
       </div>
     </div>
-
-    <!-- Aside Content Area -->
-    <div 
-      v-if="showAside" 
-      class="main-aside-area"
-      :style="{ width: asideWidth }"
-    >
-      <div class="aside-scrollable" ref="asideScrollRef">
-        <slot name="main-aside">
-          <!-- Default aside content if no slot provided -->
-          <div class="default-aside">
-            <h3>Aside Content</h3>
-            <p>This is the aside area with scrollable widgets and secondary content.</p>
-            
-            <v-card class="mt-4 mb-3" elevation="1">
-              <v-card-title class="text-subtitle-1">Quick Stats</v-card-title>
-              <v-card-text>
-                <div v-for="stat in sampleStats" :key="stat.label" class="d-flex justify-space-between align-center mb-2">
-                  <span class="text-body-2">{{ stat.label }}</span>
-                  <v-chip size="small" :color="stat.color">{{ stat.value }}</v-chip>
-                </div>
-              </v-card-text>
-            </v-card>
-
-            <v-card class="mb-3" elevation="1">
-              <v-card-title class="text-subtitle-1">Recent Activity</v-card-title>
-              <v-card-text>
-                <v-list density="compact">
-                  <v-list-item v-for="activity in sampleActivities" :key="activity.id" class="px-0">
-                    <template #prepend>
-                      <v-avatar size="24" :color="activity.color">
-                        <v-icon size="16" :icon="activity.icon"></v-icon>
-                      </v-avatar>
-                    </template>
-                    <v-list-item-title class="text-body-2">{{ activity.title }}</v-list-item-title>
-                    <v-list-item-subtitle class="text-caption">{{ activity.time }}</v-list-item-subtitle>
-                  </v-list-item>
-                </v-list>
-              </v-card-text>
-            </v-card>
-
-            <v-card class="mb-3" elevation="1">
-              <v-card-title class="text-subtitle-1">Widget Demo</v-card-title>
-              <v-card-text>
-                <div v-for="n in 8" :key="n" class="mb-3 pa-2" style="background-color: rgba(var(--v-theme-primary), 0.05); border-radius: 6px;">
-                  <div class="text-body-2 font-weight-medium mb-1">Widget {{ n }}</div>
-                  <div class="text-caption">Sample widget content to demonstrate aside scrolling behavior.</div>
-                </div>
-              </v-card-text>
-            </v-card>
-          </div>
-        </slot>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -119,12 +65,9 @@ import type { MainContentProps, MainContentEmits } from '../types/main-content'
 
 // Component props with defaults
 const props = withDefaults(defineProps<MainContentProps>(), {
-  showAside: true,
-  asideWidth: '300px',
   contentPadding: '24px',
   enableCustomScrollbar: true,
   scrollBehavior: 'smooth',
-  hideAsideOnMobile: true,
   mobileBreakpoint: 768
 })
 
@@ -133,7 +76,6 @@ const emit = defineEmits<MainContentEmits>()
 
 // Template refs
 const contentScrollRef = ref<HTMLElement>()
-const asideScrollRef = ref<HTMLElement>()
 
 // Computed properties
 const contentStyles = computed(() => ({
@@ -170,7 +112,7 @@ const sampleFeatures = ref([
   {
     id: 4,
     title: 'Flexible Slots',
-    description: 'Named slots for main content and aside areas',
+    description: 'Named slots for main content',
     icon: 'mdi-view-column'
   }
 ])
@@ -184,7 +126,7 @@ const sampleSections = ref([
   {
     id: 2,
     title: 'Layout Features',
-    content: 'The layout supports both single-column (main only) and two-column (main + aside) configurations. The aside area can be toggled and is responsive to mobile breakpoints.'
+    content: 'The layout supports  single-column (main only)'
   },
   {
     id: 3,
@@ -252,18 +194,8 @@ onMounted(() => {
   min-width: 0; /* Prevents flex item from overflowing */
 }
 
-.main-content-area.with-aside {
-  flex: 1 1 auto;
-}
 
-.main-aside-area {
-  flex: 0 0 auto;
-  min-width: 250px;
-  max-width: 400px;
-}
-
-.content-scrollable,
-.aside-scrollable {
+.content-scrollable {
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
@@ -274,9 +206,7 @@ onMounted(() => {
   padding: v-bind('props.contentPadding');
 }
 
-.aside-scrollable {
-  padding: 16px;
-}
+
 
 /* ===== Z-INDEX LAYERING FOR MAIN CONTENT ELEMENTS ===== */
 
@@ -287,15 +217,13 @@ onMounted(() => {
 }
 
 /* Content areas should be above base */
-.main-content-area,
-.main-aside-area {
+.main-content-area {
   position: relative;
   z-index: var(--z-index-content);
 }
 
 /* Scrollable containers should be elevated */
-.content-scrollable,
-.aside-scrollable {
+.content-scrollable {
   position: relative;
   z-index: var(--z-index-content);
 }
@@ -315,8 +243,7 @@ onMounted(() => {
 /* ===== ENHANCED SMOOTH SCROLLING SYSTEM ===== */
 
 /* Enhanced scrollable containers with animation system integration */
-.content-scrollable,
-.aside-scrollable {
+.content-scrollable {
   /* Smooth scrolling with momentum and easing */
   scroll-behavior: smooth;
   scroll-padding-top: var(--spacing-lg);
@@ -334,27 +261,23 @@ onMounted(() => {
 }
 
 /* Enhanced Custom Scrollbar Styling with Animation System */
-.content-scrollable::-webkit-scrollbar,
-.aside-scrollable::-webkit-scrollbar {
+.content-scrollable::-webkit-scrollbar::-webkit-scrollbar {
   width: 8px;
   transition: width var(--duration-fast) var(--ease-out-cubic);
 }
 
-.content-scrollable::-webkit-scrollbar:hover,
-.aside-scrollable::-webkit-scrollbar:hover {
+.content-scrollable::-webkit-scrollbar:hover::-webkit-scrollbar:hover {
   width: 12px;
 }
 
-.content-scrollable::-webkit-scrollbar-track,
-.aside-scrollable::-webkit-scrollbar-track {
+.content-scrollable::-webkit-scrollbar-track::-webkit-scrollbar-track {
   background: rgba(var(--v-theme-surface-variant), 0.1);
   border-radius: 6px;
   margin: var(--spacing-xs) 0;
   transition: background-color var(--duration-normal) var(--ease-out-cubic);
 }
 
-.content-scrollable::-webkit-scrollbar-thumb,
-.aside-scrollable::-webkit-scrollbar-thumb {
+.content-scrollable::-webkit-scrollbar-thumb::-webkit-scrollbar-thumb {
   background: rgba(var(--v-theme-primary), 0.3);
   border-radius: 6px;
   border: 1px solid transparent;
@@ -364,94 +287,80 @@ onMounted(() => {
               border-color var(--duration-normal) var(--ease-out-cubic);
 }
 
-.content-scrollable::-webkit-scrollbar-thumb:hover,
-.aside-scrollable::-webkit-scrollbar-thumb:hover {
+.content-scrollable::-webkit-scrollbar-thumb:hover::-webkit-scrollbar-thumb:hover {
   background: rgba(var(--v-theme-primary), 0.6);
   border-color: rgba(var(--v-theme-primary), 0.2);
   transform: scaleX(1.1);
 }
 
-.content-scrollable::-webkit-scrollbar-thumb:active,
-.aside-scrollable::-webkit-scrollbar-thumb:active {
+.content-scrollable::-webkit-scrollbar-thumb:active::-webkit-scrollbar-thumb:active {
   background: rgba(var(--v-theme-primary), 0.8);
   transform: scaleX(1.2);
 }
 
 /* Enhanced Firefox scrollbar styling */
-.content-scrollable,
-.aside-scrollable {
+.content-scrollable {
   scrollbar-width: thin;
   scrollbar-color: rgba(var(--v-theme-primary), 0.3) rgba(var(--v-theme-surface-variant), 0.1);
   scrollbar-gutter: stable;
 }
 
 /* Scroll snap points for better navigation */
-.content-scrollable > * > .v-card,
-.aside-scrollable > * > .v-card {
+.content-scrollable > * > .v-card > * > .v-card {
   scroll-snap-align: start;
   scroll-margin-top: var(--spacing-md);
 }
 
 /* Enhanced momentum scrolling for iOS */
-.content-scrollable,
-.aside-scrollable {
+.content-scrollable {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
 }
 
 /* Smooth scroll animations for content sections */
-.content-scrollable .v-card,
-.aside-scrollable .v-card {
+.content-scrollable .v-card .v-card {
   transition: transform var(--duration-normal) var(--ease-out-cubic),
               box-shadow var(--shadow-transition);
 }
 
 /* Scroll-triggered animations (intersection observer would enhance this) */
-.content-scrollable .v-card:hover,
-.aside-scrollable .v-card:hover {
+.content-scrollable .v-card:hover .v-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-hover);
 }
 
 /* Enhanced focus management for keyboard navigation */
-.content-scrollable:focus-within,
-.aside-scrollable:focus-within {
+.content-scrollable:focus-within:focus-within {
   scroll-behavior: smooth;
 }
 
 /* Accessibility: Respect reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
-  .content-scrollable,
-  .aside-scrollable {
+  .content-scrollable {
     scroll-behavior: auto;
     scroll-snap-type: none;
   }
   
-  .content-scrollable::-webkit-scrollbar-thumb,
-  .aside-scrollable::-webkit-scrollbar-thumb {
+  .content-scrollable::-webkit-scrollbar-thumb {
     transition: none;
   }
   
-  .content-scrollable .v-card,
-  .aside-scrollable .v-card {
+  .content-scrollable .v-card {
     transition: none;
   }
 }
 
 /* Default content styling */
-.default-content,
-.default-aside {
+.default-content {
   color: rgb(var(--v-theme-on-surface));
 }
 
-.default-content h2,
-.default-aside h3 {
+.default-content h2 {
   color: rgb(var(--v-theme-primary));
   margin-bottom: 16px;
 }
 
-.default-content p,
-.default-aside p {
+.default-content p {
   line-height: 1.6;
   opacity: 0.8;
 }
@@ -463,12 +372,6 @@ onMounted(() => {
     gap: 8px;
   }
   
-  .main-aside-area {
-    width: 100% !important;
-    min-width: unset;
-    max-width: unset;
-    order: 2;
-  }
   
   .main-content-area {
     order: 1;

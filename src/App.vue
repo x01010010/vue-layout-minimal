@@ -11,16 +11,6 @@
       />
     </template>
 
-    <!-- Sidebar Slots -->
-    <!-- <template #sidebar-top>
-      
-      <v-list-item class="sidebar-brand">
-        <template #prepend>
-          <v-icon icon="mdi-view-dashboard" size="large" color="primary"></v-icon>
-        </template>
-      </v-list-item>
-    </template>
-     -->
     <template #sidebar-menu>
       <!-- Main menu using AppSidebar component -->
       <AppSidebar
@@ -39,48 +29,11 @@
     <template #main-content>
       <AppMainContent>
         <template #main-content>
-          <v-container>
-            <h1>Welcome to Vue Layout Minimal</h1>
-            <p>Vue 3 + Vuetify 3 + TypeScript project with layout structure complete!</p>
-            <v-card class="mt-4">
-              <v-card-title>Layout Structure</v-card-title>
-              <v-card-text>
-                <p>This layout includes:</p>
-                <ul>
-                  <li>Header with left, center, and right slots</li>
-                  <li>Sidebar with top, menu, and bottom slots</li>
-                  <li>Main content area with content and aside slots</li>
-                  <li>Footer with left, center, and right slots</li>
-                </ul>
-                <p class="mt-4">The main content area now features:</p>
-                <ul>
-                  <li>Custom scrollable areas with styled scrollbars</li>
-                  <li>Responsive layout that adapts to screen size</li>
-                  <li>Independent scrolling for main and aside content</li>
-                  <li>Smooth scrolling behavior</li>
-                </ul>
-              </v-card-text>
-            </v-card>
-          </v-container>
-        </template>
-        
-        <template #main-aside>
-          <v-card class="ma-4">
-            <v-card-title>Aside Content</v-card-title>
-            <v-card-text>
-              <p>This is the aside area for additional content with enhanced scrolling.</p>
-              <v-divider class="my-3"></v-divider>
-              <p class="text-body-2">Try scrolling both the main content and this aside area to see the independent scrolling behavior in action.</p>
-            </v-card-text>
-          </v-card>
+          <router-view />
         </template>
       </AppMainContent>
     </template>
     
-    <template #main-aside>
-      <!-- This slot is now handled by AppMainContent -->
-    </template>
-
     <!-- Footer Slots -->
     <template #footer-left>
       <AppFooter

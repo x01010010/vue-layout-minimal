@@ -2,8 +2,6 @@
 
 export interface MainContentProps {
   // Layout configuration
-  showAside?: boolean;
-  asideWidth?: string;
   contentPadding?: string;
   
   // Scrolling behavior
@@ -11,7 +9,6 @@ export interface MainContentProps {
   scrollBehavior?: 'smooth' | 'auto';
   
   // Responsive behavior
-  hideAsideOnMobile?: boolean;
   mobileBreakpoint?: number;
 }
 
@@ -31,5 +28,4 @@ export interface ContentSection {
 
 export interface MainContentEmits {
   'content-scroll': [scrollTop: number];
-  'aside-toggle': [visible: boolean];
 }

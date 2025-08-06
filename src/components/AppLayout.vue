@@ -32,9 +32,6 @@
         <div class="main-content">
           <slot name="main-content"></slot>
         </div>
-        <div class="main-aside">
-          <slot name="main-aside"></slot>
-        </div>
       </div>
     </v-main>
 
@@ -132,9 +129,7 @@ const props = withDefaults(defineProps<LayoutProps>(), {
   flex: 1 1 auto;
 }
 
-.main-aside {
-  flex: 0 0 auto;
-}
+
 
 /* Footer Layout */
 .footer-container {
@@ -204,11 +199,7 @@ const props = withDefaults(defineProps<LayoutProps>(), {
     max-width: none;
     padding-right: 24px;
   }
-  
-  .main-aside {
-    min-width: 300px;
-    max-width: 400px;
-  }
+
 }
 
 /* Wide desktop screens */
@@ -223,9 +214,7 @@ const props = withDefaults(defineProps<LayoutProps>(), {
     padding-right: 32px;
   }
   
-  .main-aside {
-    min-width: 350px;
-  }
+
 }
 
 /* Ultra-wide screens */
@@ -252,11 +241,7 @@ const props = withDefaults(defineProps<LayoutProps>(), {
     padding-bottom: 24px;
   }
   
-  .main-aside {
-    min-width: auto;
-    max-width: none;
-    width: 100%;
-  }
+
   
   /* Adjust sidebar for portrait mode */
   .sidebar-drawer {
@@ -342,7 +327,6 @@ const props = withDefaults(defineProps<LayoutProps>(), {
 @media (min-width: 1024px) {
   .main-container,
   .main-content,
-  .main-aside,
   .header-container,
   .footer-container {
     transition: var(--responsive-layout-transition);
