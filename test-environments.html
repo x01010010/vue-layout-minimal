@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Environment Logic Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .checkbox-group { margin: 10px 0; }
+        .checkbox-group input { margin-right: 8px; }
+        .disabled { opacity: 0.6; cursor: not-allowed; }
+        .result { margin-top: 20px; padding: 10px; background: #f0f0f0; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>Environment Selection Logic Test</h1>
+    <p>This test verifies the business rules for environment selection:</p>
+    <ul>
+        <li>Development: Always selected and disabled</li>
+        <li>QA: Optional and selectable</li>
+        <li>Production: Only enabled when QA is selected</li>
+    </ul>
+
+    <div class="checkbox-group">
+        <input type="checkbox" id="dev" checked disabled>
+        <label for="dev" class="disabled">Development (Always selected)</label>
+    </div>
+
+    <div class="checkbox-group">
+        <input type="checkbox" id="qa">
+        <label for="qa">Testing/QA (Optional)</label>
+    </div>
+
+    <div class="checkbox-group">
+        <input type="checkbox" id="prod" disabled>
+        <label for="prod" class="disabled">Production (Requires QA)</label>
+    </div>
+
+    <div class="result">
+        <h3>Selected Environments:</h3>
+        <div id="selected-envs">DEV</div>
+    </div>
+
+    <script>
+        const qaCheckbox = document.getElementById('qa');
+        const prodCheckbox = document.getElementById('prod');
+        const prodLabel = document.querySelector('label[for="prod"]');
+        const selectedEnvsDiv = document.getElementById('selected-envs');
+
+        function updateEnvironments() {
+            const environments = ['DEV']; // DEV is always included
+            
+            if (qaCheckbox.checked) {
+                environments.push('QA');
+            }
+            
+            if (prodCheckbox.checked && qaCheckbox.checked) {
+                environments.push('PROD');
+            }
+            
+            selectedEnvsDiv.textContent = environments.join(', ');
+        }
+
+        function updateProductionState() {
+            if (qaCheckbox.checked) {
+                // Enable Production when QA is selected
+                prodCheckbox.disabled = false;
+                prodLabel.classList.remove('disabled');
+                prodLabel.textContent = 'Production (Available)';
+            } else {
+                // Disable and uncheck Production when QA is not selected
+                prodCheckbox.disabled = true;
+                prodCheckbox.checked = false;
+                prodLabel.classList.add('disabled');
+                prodLabel.textContent = 'Production (Requires QA)';
+            }
+            updateEnvironments();
+        }
+
+        // Event listeners
+        qaCheckbox.addEventListener('change', updateProductionState);
+        prodCheckbox.addEventListener('change', updateEnvironments);
+
+        // Initial state
+        updateProductionState();
+    </script>
+</body>
+</html>

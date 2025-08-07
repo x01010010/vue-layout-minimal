@@ -7,7 +7,7 @@ import { defineStore } from 'pinia'
 import { ref, computed, reactive, readonly } from 'vue'
 import DraftManager from '../services/draft-manager'
 import type {
-  ProjectFormData,
+  NewProjectFormData,
   ProjectCreationState,
   NavigationState,
   StepValidationResult,
@@ -21,8 +21,9 @@ import type {
   ExecutionOptions,
   ProgressEvent,
   ConnectionTestResult,
-  DatabaseConfig,
-  ProjectCreationConfig
+  ProjectCreationConfig,
+  ConditionalNavigation,
+  NavigationContext
 } from '../types/project-creation'
 
 // =============================================================================
@@ -30,45 +31,105 @@ import type {
 // =============================================================================
 
 const DEFAULT_CONFIG: ProjectCreationConfig = {
-  enabledSteps: [1, 2, 3, 4],
+  enabledSteps: [1, 2, 3, 4, 5, 6, 7, 8, 9],
   defaultStep: 1,
   stepDefinitions: [
     {
       id: 1,
-      title: 'Project Basics',
-      subtitle: 'Name, description, and type',
-      icon: 'mdi-folder-outline',
-      component: 'StepProjectBasics',
+      title: 'General Info',
+      subtitle: 'Project name, owner, and description',
+      icon: 'mdi-information-outline',
+      component: 'StepGeneralInfo',
       required: true,
       completed: false,
       valid: false
     },
     {
       id: 2,
-      title: 'Database Configuration',
-      subtitle: 'Connection and schema setup',
-      icon: 'mdi-database',
-      component: 'StepDatabaseConfig',
+      title: 'Setup Type',
+      subtitle: 'Choose OAD or Classic approach',
+      icon: 'mdi-cog-outline',
+      component: 'StepSetupType',
       required: true,
       completed: false,
       valid: false
     },
     {
       id: 3,
-      title: 'Parameters',
-      subtitle: 'Dynamic configuration',
-      icon: 'mdi-cog',
-      component: 'StepDynamicParams',
-      required: false,
+      title: 'Database Selection',
+      subtitle: 'Choose existing or create new database',
+      icon: 'mdi-database-outline',
+      component: 'StepDatabaseSelection',
+      required: true,
       completed: false,
-      valid: true
+      valid: false
+    },
+    {
+      id: 3.5, // Step 3a - conditional step
+      title: 'New Database',
+      subtitle: 'Configure new database creation',
+      icon: 'mdi-database-plus',
+      component: 'StepNewDatabase',
+      required: false, // Conditional requirement
+      completed: false,
+      valid: false
     },
     {
       id: 4,
-      title: 'Review & Execute',
-      subtitle: 'Finalize and create project',
-      icon: 'mdi-check-circle',
-      component: 'StepReviewExecute',
+      title: 'Environments',
+      subtitle: 'Select target environments',
+      icon: 'mdi-server-network',
+      component: 'StepEnvironments',
+      required: true,
+      completed: false,
+      valid: false
+    },
+    {
+      id: 5,
+      title: 'Database Authorization',
+      subtitle: 'QA and Production authentication',
+      icon: 'mdi-key-variant',
+      component: 'StepDatabaseAuth',
+      required: true,
+      completed: false,
+      valid: false
+    },
+    {
+      id: 6,
+      title: 'Notifications',
+      subtitle: 'Support group and email setup',
+      icon: 'mdi-bell-outline',
+      component: 'StepNotifications',
+      required: true,
+      completed: false,
+      valid: false
+    },
+    {
+      id: 7,
+      title: 'GitHub Setup',
+      subtitle: 'Repository and team configuration',
+      icon: 'mdi-github',
+      component: 'StepGitHub',
+      required: true,
+      completed: false,
+      valid: false
+    },
+    {
+      id: 8,
+      title: 'Entitlements',
+      subtitle: 'Ownership assignment',
+      icon: 'mdi-account-key',
+      component: 'StepEntitlements',
+      required: true,
+      completed: false,
+      valid: false
+    },
+    {
+      id: 9,
+      title: 'Review & Create',
+      subtitle: 'Final review and project creation',
+      icon: 'mdi-check-circle-outline',
+      component: 'StepReviewCreate',
       required: true,
       completed: false,
       valid: false
@@ -91,34 +152,51 @@ const DEFAULT_CONFIG: ProjectCreationConfig = {
 // Default Form Data
 // =============================================================================
 
-const createDefaultFormData = (): ProjectFormData => ({
-  basics: {
+
+const createDefaultNewProjectFormData = (): NewProjectFormData => ({
+  generalInfo: {
     name: '',
+    owner: '',
     description: '',
-    type: 'web-app',
-    template: '',
     tags: []
   },
-  database: {
-    type: 'none',
-    connectionString: '',
-    schema: '',
-    options: {
-      ssl: false,
-      poolSize: 10,
-      timeout: 30000,
-      charset: 'utf8',
-      timezone: 'UTC'
+  setupType: {
+    setupType: 'OAD'
+  },
+  databaseSelection: {
+    createNewDatabase: false
+  },
+  environments: {
+    environments: ['DEV']
+  },
+  databaseAuth: {
+    qaAuth: {
+      method: 'service_account'
+    },
+    prodAuth: {
+      method: 'service_account'
     }
   },
-  parameters: {},
-  metadata: {
-    version: '1.0.0',
-    author: '',
-    license: 'MIT',
-    repository: '',
-    createdAt: Date.now(),
-    updatedAt: Date.now()
+  notifications: {
+    supportGroup: '',
+    primaryContactEmail: '',
+    secondaryContactEmail: '',
+    notificationEvents: [],
+    escalationLevel: 'medium',
+    communicationChannels: ['email'],
+    emailDistribution: ''
+  },
+  github: {
+    githubTeam: '',
+    repositoryName: '',
+    privateRepo: true
+  },
+  entitlements: {
+    entitlementOwner: '',
+    technicalOwner: ''
+  },
+  review: {
+    reviewed: false
   }
 })
 
@@ -130,8 +208,8 @@ export const useProjectCreationStore = defineStore('projectCreation', () => {
   // Configuration
   const config = reactive<ProjectCreationConfig>(DEFAULT_CONFIG)
 
-  // Form Data
-  const formData = reactive<ProjectFormData>(createDefaultFormData())
+  // Form Data (9-step workflow)
+  const newFormData = reactive<NewProjectFormData>(createDefaultNewProjectFormData())
 
   // Navigation State
   const navigation = reactive<NavigationState>({
@@ -229,19 +307,82 @@ export const useProjectCreationStore = defineStore('projectCreation', () => {
 
   const isFormValid = computed(() => validation.globalValidation.valid)
 
-  const canExecuteProject = computed(() => 
-    isFormValid.value && 
-    execution.status === 'idle' &&
-    navigation.completedSteps.length >= config.stepDefinitions.filter(s => s.required).length
+  const canExecuteProject = computed(() => {
+    // Get all steps that are currently visible and required
+    const requiredVisibleSteps = visibleSteps.value.filter(step => {
+      // Step 3.5 is only required if it's visible
+      if (step.id === 3.5) {
+        return shouldShowStep3a.value
+      }
+      return step.required
+    })
+
+    // Check if all of these required steps are marked as valid
+    const allRequiredStepsValid = requiredVisibleSteps.every(step => step.valid)
+
+    console.log('canExecuteProject check:', {
+      allRequiredStepsValid,
+      executionStatus: execution.status,
+      requiredSteps: visibleSteps.value.filter(step => step.required).map(step => ({
+        id: step.id,
+        valid: step.valid,
+        completed: step.completed
+      }))
+    })
+    return allRequiredStepsValid && execution.status === 'idle'
+  })
+
+  // =============================================================================
+  // Conditional Navigation Logic
+  // =============================================================================
+
+  // Determine if Step 3a should be visible based on database selection
+  const shouldShowStep3a = computed(() =>
+    newFormData.databaseSelection?.createNewDatabase === true
   )
+
+  // Get visible steps (filtering out Step 3a when not needed)
+  const visibleSteps = computed(() =>
+    config.stepDefinitions.filter(step =>
+      step.id !== 3.5 || shouldShowStep3a.value
+    )
+  )
+
+  // Get current step index within visible steps
+  const currentStepIndex = computed(() =>
+    visibleSteps.value.findIndex(step => step.id === navigation.currentStep)
+  )
+
+  // Get total count of visible steps
+  const totalVisibleSteps = computed(() => visibleSteps.value.length)
+
+  // Check if current step can proceed (validation + conditional logic)
+  const canProceed = computed(() => {
+    const currentStep = visibleSteps.value[currentStepIndex.value]
+    if (!currentStep) return false
+    
+    // Step 3a is only required if it's visible
+    if (currentStep.id === 3.5) {
+      return shouldShowStep3a.value && currentStep.valid
+    }
+    
+    return currentStep.required ? currentStep.valid : true
+  })
 
   // =============================================================================
   // Navigation Actions
   // =============================================================================
 
   function goToStep(stepId: number): void {
+    // Check if the step exists in visible steps
+    const targetStep = visibleSteps.value.find(step => step.id === stepId)
+    if (!targetStep) {
+      console.warn(`Cannot navigate to step ${stepId} - step not visible`)
+      return
+    }
+
     if (!canNavigateToStep.value(stepId)) {
-      console.warn(`Cannot navigate to step ${stepId}`)
+      console.warn(`Cannot navigate to step ${stepId} - navigation not allowed`)
       return
     }
 
@@ -250,36 +391,53 @@ export const useProjectCreationStore = defineStore('projectCreation', () => {
   }
 
   function nextStep(): void {
-    if (navigation.currentStep < navigation.totalSteps) {
-      goToStep(navigation.currentStep + 1)
+    const currentIndex = currentStepIndex.value
+    if (currentIndex >= 0 && currentIndex < visibleSteps.value.length - 1) {
+      const nextStepId = visibleSteps.value[currentIndex + 1].id
+      goToStep(nextStepId)
     }
   }
 
   function previousStep(): void {
-    if (navigation.currentStep > 1) {
-      goToStep(navigation.currentStep - 1)
+    const currentIndex = currentStepIndex.value
+    if (currentIndex > 0) {
+      const prevStepId = visibleSteps.value[currentIndex - 1].id
+      goToStep(prevStepId)
     }
   }
 
   function updateNavigationState(): void {
-    navigation.canNavigateBack = navigation.currentStep > 1
-    navigation.canNavigateForward = canNavigateToStep.value(navigation.currentStep + 1)
+    const currentIndex = currentStepIndex.value
+    navigation.canNavigateBack = currentIndex > 0
+    navigation.canNavigateForward = currentIndex >= 0 && currentIndex < visibleSteps.value.length - 1
+    
+    // Update total steps to reflect visible steps
+    navigation.totalSteps = totalVisibleSteps.value
   }
 
   // =============================================================================
   // Form Data Actions
   // =============================================================================
 
-  function updateFormData<T extends keyof ProjectFormData>(
-    section: T, 
-    data: Partial<ProjectFormData[T]>
+  function updateNewFormData<T extends keyof NewProjectFormData>(
+    section: T,
+    data: Partial<NewProjectFormData[T]>
   ): void {
-    Object.assign(formData[section], data)
-    formData.metadata.updatedAt = Date.now()
+    if (newFormData[section]) {
+      Object.assign(newFormData[section], data)
+    } else {
+      // If the section doesn't exist, create it. This is crucial for conditional steps
+      // like NewDatabase, which aren't in the initial state.
+      (newFormData as any)[section] = data;
+    }
     validation.isDirty = true
 
     if (config.validateOnChange) {
-      validateCurrentStep()
+      // Debounce validation to prevent rapid re-renders
+      if (debounceTimer) clearTimeout(debounceTimer)
+      debounceTimer = window.setTimeout(() => {
+        validateCurrentStep()
+      }, 500) // 500ms debounce delay
     }
 
     if (draft.autoSaveEnabled) {
@@ -288,7 +446,7 @@ export const useProjectCreationStore = defineStore('projectCreation', () => {
   }
 
   function resetForm(): void {
-    Object.assign(formData, createDefaultFormData())
+    Object.assign(newFormData, createDefaultNewProjectFormData())
     navigation.currentStep = 1
     navigation.completedSteps = []
     validation.stepValidation = {}
@@ -302,8 +460,6 @@ export const useProjectCreationStore = defineStore('projectCreation', () => {
   // =============================================================================
 
   async function validateStep(stepId: number): Promise<boolean> {
-    // This is a placeholder implementation
-    // In a real application, this would contain actual validation logic
     const stepDef = config.stepDefinitions.find(s => s.id === stepId)
     if (!stepDef) return false
 
@@ -311,10 +467,10 @@ export const useProjectCreationStore = defineStore('projectCreation', () => {
     const errors: any[] = []
     const warnings: any[] = []
 
-    // Basic validation based on step
+    // Validation logic for new 9-step workflow
     switch (stepId) {
-      case 1: // Project Basics
-        if (!formData.basics.name.trim()) {
+      case 1: // General Info
+        if (!newFormData.generalInfo.name.trim()) {
           errors.push({
             field: 'name',
             message: 'Project name is required',
@@ -323,7 +479,16 @@ export const useProjectCreationStore = defineStore('projectCreation', () => {
           })
           isValid = false
         }
-        if (!formData.basics.description.trim()) {
+        if (!newFormData.generalInfo.owner.trim()) {
+          errors.push({
+            field: 'owner',
+            message: 'Project owner is required',
+            code: 'REQUIRED',
+            severity: 'error'
+          })
+          isValid = false
+        }
+        if (!newFormData.generalInfo.description.trim()) {
           warnings.push({
             field: 'description',
             message: 'Project description is recommended',
@@ -332,11 +497,11 @@ export const useProjectCreationStore = defineStore('projectCreation', () => {
         }
         break
 
-      case 2: // Database Configuration
-        if (!formData.database.connectionString.trim()) {
+      case 2: // Setup Type
+        if (!newFormData.setupType.setupType) {
           errors.push({
-            field: 'connectionString',
-            message: 'Database connection string is required',
+            field: 'setupType',
+            message: 'Setup type selection is required',
             code: 'REQUIRED',
             severity: 'error'
           })
@@ -344,12 +509,241 @@ export const useProjectCreationStore = defineStore('projectCreation', () => {
         }
         break
 
-      case 3: // Parameters (optional step)
-        isValid = true
+      case 3: // Database Selection
+        if (newFormData.databaseSelection.createNewDatabase === undefined) {
+          errors.push({
+            field: 'createNewDatabase',
+            message: 'Database selection is required',
+            code: 'REQUIRED',
+            severity: 'error'
+          })
+          isValid = false
+        }
+        if (!newFormData.databaseSelection.createNewDatabase && !newFormData.databaseSelection.existingDatabase?.trim()) {
+          errors.push({
+            field: 'existingDatabase',
+            message: 'Existing database name is required when not creating new database',
+            code: 'REQUIRED',
+            severity: 'error'
+          })
+          isValid = false
+        }
         break
 
-      case 4: // Review & Execute
-        isValid = validation.globalValidation.valid
+      case 3.5: // New Database (conditional)
+        if (shouldShowStep3a.value) {
+          if (!newFormData.newDatabase?.businessArea) {
+            errors.push({
+              field: 'businessArea',
+              message: 'Business area is required',
+              code: 'REQUIRED',
+              severity: 'error'
+            })
+            isValid = false
+          }
+          if (!newFormData.newDatabase?.environments?.length) {
+            errors.push({
+              field: 'environments',
+              message: 'At least one environment is required',
+              code: 'REQUIRED',
+              severity: 'error'
+            })
+            isValid = false
+          }
+          if (!newFormData.newDatabase?.databases?.length) {
+            errors.push({
+              field: 'databases',
+              message: 'At least one database configuration is required',
+              code: 'REQUIRED',
+              severity: 'error'
+            })
+            isValid = false
+          } else {
+            // Validate each database configuration
+            newFormData.newDatabase.databases.forEach((database, dbIndex) => {
+              if (!database.name?.trim()) {
+                errors.push({
+                  field: `databases[${dbIndex}].name`,
+                  message: `Database ${dbIndex + 1} name is required`,
+                  code: 'REQUIRED',
+                  severity: 'error'
+                })
+                isValid = false
+              }
+              
+              if (!database.entitlementBases?.length) {
+                errors.push({
+                  field: `databases[${dbIndex}].entitlementBases`,
+                  message: `Database ${dbIndex + 1} requires at least one entitlement base`,
+                  code: 'REQUIRED',
+                  severity: 'error'
+                })
+                isValid = false
+              }
+              
+              // Validate schemas if any are present
+              database.schemas?.forEach((schema, schemaIndex) => {
+                if (!schema.name?.trim()) {
+                  errors.push({
+                    field: `databases[${dbIndex}].schemas[${schemaIndex}].name`,
+                    message: `Schema ${schemaIndex + 1} in Database ${dbIndex + 1} name is required`,
+                    code: 'REQUIRED',
+                    severity: 'error'
+                  })
+                  isValid = false
+                }
+                
+                if (!schema.purpose) {
+                  errors.push({
+                    field: `databases[${dbIndex}].schemas[${schemaIndex}].purpose`,
+                    message: `Schema ${schemaIndex + 1} in Database ${dbIndex + 1} purpose is required`,
+                    code: 'REQUIRED',
+                    severity: 'error'
+                  })
+                  isValid = false
+                }
+                
+                if (!schema.dataRetentionDays || schema.dataRetentionDays < 1) {
+                  errors.push({
+                    field: `databases[${dbIndex}].schemas[${schemaIndex}].dataRetentionDays`,
+                    message: `Schema ${schemaIndex + 1} in Database ${dbIndex + 1} data retention must be at least 1 day`,
+                    code: 'INVALID_VALUE',
+                    severity: 'error'
+                  })
+                  isValid = false
+                }
+              })
+            })
+          }
+        }
+        break
+
+      case 4: // Environments
+        if (!newFormData.environments.environments?.length) {
+          errors.push({
+            field: 'environments',
+            message: 'At least one environment is required',
+            code: 'REQUIRED',
+            severity: 'error'
+          })
+          isValid = false
+        }
+        break
+
+      case 5: // Database Authorization
+        if (!newFormData.databaseAuth.qaAuth.method) {
+          errors.push({
+            field: 'qaAuth.method',
+            message: 'QA authentication method is required',
+            code: 'REQUIRED',
+            severity: 'error'
+          })
+          isValid = false
+        }
+        if (!newFormData.databaseAuth.prodAuth.method) {
+          errors.push({
+            field: 'prodAuth.method',
+            message: 'Production authentication method is required',
+            code: 'REQUIRED',
+            severity: 'error'
+          })
+          isValid = false
+        }
+        break
+
+      case 6: // Notifications
+        if (!newFormData.notifications.supportGroup.trim()) {
+          errors.push({
+            field: 'supportGroup',
+            message: 'Support group is required',
+            code: 'REQUIRED',
+            severity: 'error'
+          })
+          isValid = false
+        }
+        // Email distribution is optional according to the UI implementation
+        // Only validate email distribution format if provided
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        if (newFormData.notifications.emailDistribution?.trim() && !emailRegex.test(newFormData.notifications.emailDistribution)) {
+          errors.push({
+            field: 'emailDistribution',
+            message: 'Email distribution format is invalid',
+            code: 'INVALID_FORMAT',
+            severity: 'error'
+          })
+          isValid = false
+        }
+        break
+
+      case 7: // GitHub Setup
+        if (!newFormData.github.githubTeam.trim()) {
+          errors.push({
+            field: 'githubTeam',
+            message: 'GitHub team is required',
+            code: 'REQUIRED',
+            severity: 'error'
+          })
+          isValid = false
+        }
+        if (!newFormData.github.repositoryName.trim()) {
+          errors.push({
+            field: 'repositoryName',
+            message: 'Repository name is required',
+            code: 'REQUIRED',
+            severity: 'error'
+          })
+          isValid = false
+        }
+        break
+
+      case 8: // Entitlements
+        const { entitlementOwner, technicalOwner } = newFormData.entitlements
+        if (!entitlementOwner.trim()) {
+          errors.push({
+            field: 'entitlementOwner',
+            message: 'Entitlement owner is required',
+            code: 'REQUIRED',
+            severity: 'error'
+          })
+          isValid = false
+        }
+        if (!technicalOwner.trim()) {
+          errors.push({
+            field: 'technicalOwner',
+            message: 'Technical owner is required',
+            code: 'REQUIRED',
+            severity: 'error'
+          })
+          isValid = false
+        }
+        // Cross-field validation
+        if (entitlementOwner.trim() && technicalOwner.trim() && entitlementOwner === technicalOwner) {
+          errors.push({
+            field: 'entitlementOwner',
+            message: 'Entitlement and technical owners must be different',
+            code: 'UNIQUE',
+            severity: 'error'
+          })
+          errors.push({
+            field: 'technicalOwner',
+            message: 'Entitlement and technical owners must be different',
+            code: 'UNIQUE',
+            severity: 'error'
+          })
+          isValid = false
+        }
+        break
+
+      case 9: // Review & Create
+        if (!newFormData.review.reviewed) {
+          errors.push({
+            field: 'reviewed',
+            message: 'Please review all information before proceeding',
+            code: 'REQUIRED',
+            severity: 'error'
+          })
+          isValid = false
+        }
         break
     }
 
@@ -361,6 +755,19 @@ export const useProjectCreationStore = defineStore('projectCreation', () => {
     }
 
     validation.stepValidation[stepId] = result
+    
+    console.log(`Validating Step ${stepId}:`, {
+      isValid,
+      errors: result.errors,
+      warnings: result.warnings,
+      completedSteps: navigation.completedSteps,
+      stepDefinition: {
+        id: stepDef.id,
+        title: stepDef.title,
+        previousValid: stepDef.valid,
+        newValid: isValid
+      }
+    })
     
     // Update step definition
     stepDef.valid = isValid
@@ -459,14 +866,14 @@ export const useProjectCreationStore = defineStore('projectCreation', () => {
       draft.saveError = null
 
       const draftId = await draftManager.saveDraft(
-        formData,
+        newFormData,
         {
           currentStep: navigation.currentStep,
           totalSteps: navigation.totalSteps
         },
         {
-          title: formData.basics.name || 'Untitled Project',
-          description: formData.basics.description,
+          title: newFormData.generalInfo.name || 'Untitled Project',
+          description: newFormData.generalInfo.description,
           draftId: draft.currentDraftId || undefined
         }
       )
@@ -507,14 +914,14 @@ export const useProjectCreationStore = defineStore('projectCreation', () => {
       draft.saveError = null
 
       const draftId = await draftManager.saveDraft(
-        formData,
+        newFormData,
         {
           currentStep: navigation.currentStep,
           totalSteps: navigation.totalSteps
         },
         {
-          title: title || formData.basics.name || 'Untitled Project',
-          description: description || formData.basics.description,
+          title: title || newFormData.generalInfo.name || 'Untitled Project',
+          description: description || newFormData.generalInfo.description,
           draftId: draft.currentDraftId || undefined
         }
       )
@@ -558,11 +965,13 @@ export const useProjectCreationStore = defineStore('projectCreation', () => {
         if (options.mergeWithCurrent) {
           // Merge logic - preserve existing data where new data is empty
           Object.keys(draftData.formData).forEach(key => {
-            const section = key as keyof ProjectFormData
-            Object.assign(formData[section], draftData.formData[section])
+            const section = key as keyof NewProjectFormData
+            if (newFormData[section]) {
+              Object.assign(newFormData[section], draftData.formData[section])
+            }
           })
         } else {
-          Object.assign(formData, draftData.formData)
+          Object.assign(newFormData, draftData.formData)
         }
       }
 
@@ -737,7 +1146,7 @@ export const useProjectCreationStore = defineStore('projectCreation', () => {
   // Database Testing
   // =============================================================================
 
-  async function testDatabaseConnection(config: DatabaseConfig): Promise<ConnectionTestResult> {
+  async function testDatabaseConnection(config: any): Promise<ConnectionTestResult> {
     // Simulate database connection test
     await new Promise(resolve => setTimeout(resolve, 1000))
     
@@ -798,19 +1207,26 @@ export const useProjectCreationStore = defineStore('projectCreation', () => {
 
   return {
     // State (readonly)
-    formData: readonly(formData),
+    newFormData: readonly(newFormData),
     navigation: readonly(navigation),
     validation: readonly(validation),
     draft: readonly(draft),
     execution: readonly(execution),
     config: readonly(config),
 
-    // Computed properties
+    // Computed properties (legacy)
     currentStepDefinition,
     canNavigateToStep,
     highestValidStep,
     isFormValid,
     canExecuteProject,
+
+    // New computed properties (9-step workflow)
+    shouldShowStep3a,
+    visibleSteps,
+    currentStepIndex,
+    totalVisibleSteps,
+    canProceed,
 
     // Navigation actions
     goToStep,
@@ -818,7 +1234,7 @@ export const useProjectCreationStore = defineStore('projectCreation', () => {
     previousStep,
 
     // Form actions
-    updateFormData,
+    updateNewFormData,
     resetForm,
 
     // Validation actions

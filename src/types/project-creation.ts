@@ -1,13 +1,38 @@
 /**
  * TypeScript interfaces for Project Creation form configuration and state management
- * Provides comprehensive types for multi-step form, validation, draft persistence, and API execution
+ * Provides comprehensive types for 9-step multi-step form, validation, draft persistence, and API execution
  */
 
 import type { Ref } from 'vue'
 
 // =============================================================================
-// Project Types
+// Core Types and Enums
 // =============================================================================
+
+/**
+ * Setup type selection for Step 2
+ */
+export type SetupType = 'OAD' | 'Classic'
+
+/**
+ * Business areas supported by the system
+ */
+export type BusinessArea = 'cl' | 'claims' | 'corporate' | 'crm' | 'it' | 'pl'
+
+/**
+ * Environment types with selection logic
+ */
+export type EnvironmentType = 'DEV' | 'QA' | 'PROD'
+
+/**
+ * Schema purposes for database schemas
+ */
+export type SchemaPurpose = 'raw' | 'staging' | 'user_managed' | 'target' | 'ods' | 'published'
+
+/**
+ * Database authentication methods
+ */
+export type DatabaseAuthMethod = 'service_account' | 'keypair'
 
 /**
  * Supported project types
@@ -20,105 +45,414 @@ export type ProjectType = 'web-app' | 'api-service' | 'mobile-app' | 'desktop-ap
 export type DatabaseType = 'postgresql' | 'mysql' | 'mongodb' | 'sqlite' | 'redis' | 'none'
 
 // =============================================================================
-// Form Step Data Interfaces
+// Step-Specific Data Interfaces
 // =============================================================================
 
 /**
- * Step 1: Project Basics configuration
+ * Step 1: General Info configuration
+ * Contains basic project information including the required owner field
  */
-export interface ProjectBasics {
+export interface GeneralInfo {
+  /** Project name (required) */
   name: string
+  /** Project owner (required) */
+  owner: string
+  /** Project description (required) */
   description: string
-  type: ProjectType
-  template?: string
+  /** Project tags (optional) */
   tags: string[]
 }
 
 /**
- * Database connection options
+ * Step 2: Setup Type selection
+ * Choice between OAD (On-Demand) and Classic setup approaches
  */
-export interface DatabaseOptions {
-  ssl?: boolean
-  poolSize?: number
-  timeout?: number
-  charset?: string
-  timezone?: string
-  // Redis specific options
-  database?: number
-  // MongoDB specific options
-  authSource?: string
-  replicaSet?: string
-  // SQLite specific options
-  filePath?: string
-  // SSL certificate options
-  sslCert?: string
-  sslKey?: string
-  sslCA?: string
-  // Connection retry options
-  retryAttempts?: number
-  retryDelay?: number
+export interface SetupTypeSelection {
+  /** Selected setup type (required) */
+  setupType: SetupType
 }
 
 /**
- * Step 2: Database Configuration
+ * Step 3: Database Selection
+ * Choice between using existing database or creating new one
  */
-export interface DatabaseConfig {
-  type: DatabaseType
-  connectionString: string
-  schema?: string
-  options: DatabaseOptions
+export interface DatabaseSelection {
+  /** Name of existing database (if selected) */
+  existingDatabase?: string
+  /** Flag indicating if user wants to create new database */
+  createNewDatabase: boolean
 }
 
 /**
- * Parameter value types for dynamic parameters
+ * Entitlement Base configuration for new databases
+ *
+ * Defines ownership and access control for database entitlements.
+ * Each entitlement base must have both read-write and read-only ownership assignments.
+ *
+ * @example
+ * ```typescript
+ * const entitlementBase: EntitlementBase = {
+ *   name: "my-project-entitlement",
+ *   owner: "john.doe@company.com",
+ *   tso: "tech-team@company.com",
+ *   readOnlyOwner: "readonly-user@company.com",
+ *   readOnlyTso: "readonly-tech@company.com"
+ * }
+ * ```
  */
-export type ParameterValue = 
-  | string 
-  | number 
-  | boolean 
-  | string[] 
-  | ParameterObject
-
-/**
- * Parameter object with metadata
- */
-export interface ParameterObject {
-  value: any
-  metadata?: {
-    source?: string
-    validated?: boolean
-    encrypted?: boolean
-  }
+export interface EntitlementBase {
+  /** Name of the entitlement base (required) - must be unique within the system */
+  name: string
+  /** Owner of the entitlement base (required) - email address with full access rights */
+  owner: string
+  /** TSO (Technical Service Owner) (required) - email address for technical ownership */
+  tso: string
+  /** Read-only owner (required) - email address with read-only access rights */
+  readOnlyOwner: string
+  /** Read-only TSO (required) - email address for read-only technical ownership */
+  readOnlyTso: string
 }
 
 /**
- * Step 3-N: Dynamic Parameters configuration
+ * Schema configuration for new databases
  */
-export interface DynamicParameters {
-  [key: string]: ParameterValue
+export interface DatabaseSchema {
+  /** Schema name */
+  name: string
+  /** Schema purpose */
+  purpose: SchemaPurpose
+  /** Data retention in days */
+  dataRetentionDays: number
+  /** Whether schema is restricted */
+  restricted: boolean
 }
 
 /**
- * Project metadata
+ * Custom tag configuration for new databases
  */
-export interface ProjectMetadata {
-  version: string
-  author?: string
-  license?: string
-  repository?: string
-  createdAt: number
-  updatedAt: number
+export interface CustomTag {
+  /** Tag name */
+  tag: string
+  /** Support group name */
+  supportGroupName: string
+  /** Support group email */
+  supportGroupEmail: string
 }
 
 /**
- * Complete project form data
+ * Database configuration for new database creation
+ *
+ * Comprehensive configuration object for creating a new database instance.
+ * Includes entitlement management, schema definitions, and custom tagging.
+ *
+ * @example
+ * ```typescript
+ * const dbConfig: NewDatabaseConfig = {
+ *   name: "my-project-db",
+ *   entitlementBases: [entitlementBase],
+ *   schemas: [{ name: "raw", purpose: "raw", dataRetentionDays: 90, restricted: false }],
+ *   customTags: [{ tag: "project-alpha", supportGroupName: "team-alpha", supportGroupEmail: "alpha@company.com" }]
+ * }
+ * ```
  */
-export interface ProjectFormData {
-  basics: ProjectBasics
-  database: DatabaseConfig
-  parameters: DynamicParameters
-  metadata: ProjectMetadata
+export interface NewDatabaseConfig {
+  /** Database name (required) - must be unique and follow naming conventions */
+  name: string
+  /** Entitlement bases (required, at least one) - defines access control and ownership */
+  entitlementBases: EntitlementBase[]
+  /** Database schemas (optional) - defines data organization and retention policies */
+  schemas: DatabaseSchema[]
+  /** Custom tags (optional) - additional metadata and support group assignments */
+  customTags: CustomTag[]
 }
+
+/**
+ * Step 3a: New Database creation (conditional step)
+ *
+ * Complex nested forms for database configuration that appears conditionally
+ * when user selects "Create new database" in Step 3. This step includes
+ * business area selection, environment targeting, and multiple database configurations.
+ *
+ * Business Logic:
+ * - DEV environment is always included by default
+ * - QA and PROD environments are optional selections
+ * - Multiple databases can be configured in a single step
+ * - Each database requires at least one entitlement base
+ *
+ * @example
+ * ```typescript
+ * const newDbCreation: NewDatabaseCreation = {
+ *   businessArea: "it",
+ *   environments: ["DEV", "QA", "PROD"],
+ *   databases: [dbConfig1, dbConfig2]
+ * }
+ * ```
+ */
+export interface NewDatabaseCreation {
+  /** Business area (required) - determines organizational context and permissions */
+  businessArea: BusinessArea
+  /** Selected environments (DEV always included) - target deployment environments */
+  environments: EnvironmentType[]
+  /** Database configurations - one or more database instances to create */
+  databases: NewDatabaseConfig[]
+}
+
+/**
+ * Step 4: Environment Selection
+ * Environment selection with business logic
+ */
+export interface EnvironmentSelection {
+  /** Selected environments with validation rules */
+  environments: EnvironmentType[]
+}
+
+/**
+ * Database authentication configuration
+ */
+export interface DatabaseAuth {
+  /** Authentication method */
+  method: DatabaseAuthMethod
+  /** Service account (if using service account method) */
+  serviceAccount?: string
+  /** Password (if using service account method) */
+  password?: string
+  /** Public key (if using keypair method) */
+  publicKey?: string
+  /** Private key (if using keypair method) */
+  privateKey?: string
+}
+
+/**
+ * Step 5: Database Authorization
+ * Authentication details for QA and Production environments
+ */
+export interface DatabaseAuthorization {
+  /** QA database authentication */
+  qaAuth: DatabaseAuth
+  /** Production database authentication */
+  prodAuth: DatabaseAuth
+}
+
+/**
+ * Communication channel types for notifications
+ */
+export type CommunicationChannel = 'email' | 'slack' | 'teams' | 'webhook'
+
+/**
+ * Notification event types
+ */
+export type NotificationEventType = 'deployment' | 'errors' | 'maintenance' | 'security' | 'performance' | 'alerts'
+
+/**
+ * Escalation levels for notifications
+ */
+export type EscalationLevel = 'low' | 'medium' | 'high' | 'critical'
+
+/**
+ * Support group configuration
+ */
+export interface SupportGroup {
+  /** Support group ID */
+  id: string
+  /** Support group display name */
+  name: string
+  /** Support group description */
+  description: string
+}
+
+/**
+ * Notification event configuration
+ */
+export interface NotificationEvent {
+  /** Event type identifier */
+  id: NotificationEventType
+  /** Event display label */
+  label: string
+  /** Event description */
+  description: string
+  /** Whether this event is enabled */
+  enabled: boolean
+}
+
+/**
+ * Step 6: Notifications configuration
+ * Comprehensive notification settings for project support and communication
+ */
+export interface NotificationConfig {
+  /** Selected support group (required) */
+  supportGroup: string
+  /** Primary contact email (required) */
+  primaryContactEmail: string
+  /** Secondary contact email (optional) */
+  secondaryContactEmail?: string
+  /** Selected notification events */
+  notificationEvents: NotificationEventType[]
+  /** Escalation level setting */
+  escalationLevel: EscalationLevel
+  /** Preferred communication channels */
+  communicationChannels: CommunicationChannel[]
+  /** Additional email distribution list (legacy field for backward compatibility) */
+  emailDistribution: string
+}
+
+/**
+ * Step 7: GitHub Setup configuration
+ * Repository and team configuration
+ */
+export interface GitHubSetup {
+  /** GitHub team name (required) */
+  githubTeam: string
+  /** Repository name (required) */
+  repositoryName: string
+  /** Whether repository should be private */
+  privateRepo: boolean
+}
+
+/**
+ * Step 8: Entitlements configuration
+ * Ownership assignment
+ */
+export interface EntitlementsConfig {
+  /** Entitlement owner (required) */
+  entitlementOwner: string
+  /** Technical owner (required) */
+  technicalOwner: string
+}
+
+/**
+ * Step 9: Review & Create
+ * Summary of all configuration data
+ */
+export interface ReviewAndCreate {
+  /** Flag indicating user has reviewed all data */
+  reviewed: boolean
+  /** Optional notes or comments */
+  notes?: string
+}
+
+
+// =============================================================================
+// Conditional Navigation Types
+// =============================================================================
+
+/**
+ * Navigation context for conditional step visibility
+ *
+ * Provides context information needed to make navigation decisions,
+ * particularly for conditional steps like Step 3a that only appear
+ * based on user selections in previous steps.
+ *
+ * @example
+ * ```typescript
+ * const context: NavigationContext = {
+ *   currentStep: 3,
+ *   showStep3a: formData.databaseSelection?.createNewDatabase === true,
+ *   formData: { databaseSelection: { createNewDatabase: true } }
+ * }
+ * ```
+ */
+export interface NavigationContext {
+  /** Current step number (1-9) */
+  currentStep: number
+  /** Whether Step 3a should be visible based on Step 3 selections */
+  showStep3a: boolean
+  /** Form data context for navigation decisions - partial data for flexibility */
+  formData: Partial<NewProjectFormData>
+}
+
+/**
+ * Conditional navigation configuration
+ *
+ * Defines the business logic for conditional step navigation in the 9-step workflow.
+ * Handles the complex case where Step 3a (New Database Creation) only appears
+ * when the user selects "Create new database" in Step 3.
+ *
+ * Navigation Flow:
+ * - Steps 1-2: Always visible, linear progression
+ * - Step 3: Always visible, determines Step 3a visibility
+ * - Step 3a: Conditional - only if createNewDatabase is true
+ * - Steps 4-9: Always visible, but numbering shifts based on Step 3a presence
+ *
+ * @example
+ * ```typescript
+ * const navigation: ConditionalNavigation = {
+ *   shouldShowStep3a: (ctx) => ctx.formData.databaseSelection?.createNewDatabase === true,
+ *   getNextStep: (current, ctx) => ctx.showStep3a && current === 3 ? 3.5 : current + 1,
+ *   getPreviousStep: (current, ctx) => ctx.showStep3a && current === 4 ? 3.5 : current - 1
+ * }
+ * ```
+ */
+export interface ConditionalNavigation {
+  /** Function to determine if Step 3a should be shown based on form data */
+  shouldShowStep3a: (context: NavigationContext) => boolean
+  /** Function to get next step number, accounting for conditional Step 3a */
+  getNextStep: (currentStep: number, context: NavigationContext) => number
+  /** Function to get previous step number, accounting for conditional Step 3a */
+  getPreviousStep: (currentStep: number, context: NavigationContext) => number
+}
+
+// =============================================================================
+// Updated Form Data Interface
+// =============================================================================
+
+/**
+ * Complete project form data for 9-step workflow
+ *
+ * Comprehensive interface representing all data collected through the 9-step
+ * project creation workflow. Includes conditional Step 3a data that only
+ * appears when creating new databases.
+ *
+ * Workflow Steps:
+ * 1. General Info - Basic project details and ownership
+ * 2. Setup Type - OAD vs Classic approach selection
+ * 3. Database Selection - Choose existing or create new database
+ * 3a. New Database Creation - Conditional step for database configuration
+ * 4. Environment Selection - Target deployment environments
+ * 5. Database Authorization - QA/Prod authentication setup
+ * 6. Notifications - Support group and email configuration
+ * 7. GitHub Setup - Repository and team configuration
+ * 8. Entitlements - Ownership and access assignments
+ * 9. Review & Create - Final validation and submission
+ *
+ * @example
+ * ```typescript
+ * const formData: NewProjectFormData = {
+ *   generalInfo: { name: "my-project", owner: "john.doe", description: "...", tags: [] },
+ *   setupType: { setupType: "OAD" },
+ *   databaseSelection: { createNewDatabase: true },
+ *   newDatabase: { businessArea: "it", environments: ["DEV", "QA"], databases: [...] },
+ *   environments: { environments: ["DEV", "QA", "PROD"] },
+ *   databaseAuth: { qaAuth: {...}, prodAuth: {...} },
+ *   notifications: { supportGroup: "team-alpha", emailDistribution: "alpha@company.com" },
+ *   github: { githubTeam: "alpha-team", repositoryName: "my-project", privateRepo: true },
+ *   entitlements: { entitlementOwner: "john.doe", technicalOwner: "tech-lead" },
+ *   review: { reviewed: true, notes: "Ready for deployment" }
+ * }
+ * ```
+ */
+export interface NewProjectFormData {
+  /** Step 1: General project information - name, owner, description, and tags */
+  generalInfo: GeneralInfo
+  /** Step 2: Setup type selection - OAD (On-Demand) vs Classic approach */
+  setupType: SetupTypeSelection
+  /** Step 3: Database selection - choose existing database or create new one */
+  databaseSelection: DatabaseSelection
+  /** Step 3a: New database creation (conditional) - only present when createNewDatabase is true */
+  newDatabase?: NewDatabaseCreation
+  /** Step 4: Environment selection - target deployment environments with validation */
+  environments: EnvironmentSelection
+  /** Step 5: Database authorization - QA and Production authentication configuration */
+  databaseAuth: DatabaseAuthorization
+  /** Step 6: Notifications configuration - support group and email distribution setup */
+  notifications: NotificationConfig
+  /** Step 7: GitHub setup - repository and team configuration */
+  github: GitHubSetup
+  /** Step 8: Entitlements configuration - ownership and access assignments */
+  entitlements: EntitlementsConfig
+  /** Step 9: Review and create - final validation, notes, and submission confirmation */
+  review: ReviewAndCreate
+}
+
 
 // =============================================================================
 // Validation Types
@@ -234,7 +568,7 @@ export interface DraftState {
  */
 export interface ProjectCreationDraft {
   metadata: DraftMetadata
-  formData: ProjectFormData
+  formData: NewProjectFormData
   navigationState: Pick<NavigationState, 'currentStep' | 'totalSteps'>
 }
 
@@ -332,7 +666,7 @@ export interface ExecutionOptions {
  */
 export interface ProjectCreationState {
   // Form Data
-  formData: ProjectFormData
+  formData: NewProjectFormData
   
   // Navigation State
   navigation: NavigationState
@@ -410,7 +744,7 @@ export interface ParameterDefinition {
  */
 export interface UseProjectCreationFormReturn {
   // Form state
-  readonly formData: Readonly<Ref<ProjectFormData>>
+  readonly formData: Readonly<Ref<NewProjectFormData>>
   readonly navigationState: Readonly<Ref<NavigationState>>
   readonly validationState: Readonly<Ref<ProjectCreationState['validation']>>
   
@@ -420,7 +754,7 @@ export interface UseProjectCreationFormReturn {
   previousStep: () => void
   
   // Form actions
-  updateFormData: <T extends keyof ProjectFormData>(section: T, data: Partial<ProjectFormData[T]>) => void
+  updateFormData: <T extends keyof NewProjectFormData>(section: T, data: Partial<NewProjectFormData[T]>) => void
   validateStep: (step: number) => Promise<boolean>
   validateForm: () => Promise<boolean>
   resetForm: () => void
@@ -444,7 +778,7 @@ export interface UseProjectDraftManagerReturn {
   saveDraft: (title?: string, description?: string) => Promise<string>
   loadDraft: (draftId: string, options?: DraftRestorationOptions) => Promise<void>
   deleteDraft: (draftId: string) => Promise<void>
-  createDraft: (formData: ProjectFormData, title: string) => Promise<string>
+  createDraft: (formData: NewProjectFormData, title: string) => Promise<string>
   
   // Auto-save management
   enableAutoSave: () => void
@@ -462,7 +796,7 @@ export interface UseProjectExecutionReturn {
   readonly canExecute: Readonly<Ref<boolean>>
   
   // Execution actions
-  executeProject: (formData: ProjectFormData, options?: Partial<ExecutionOptions>) => Promise<ProjectCreationResult>
+  executeProject: (formData: NewProjectFormData, options?: Partial<ExecutionOptions>) => Promise<ProjectCreationResult>
   cancelExecution: () => void
   retryExecution: () => Promise<ProjectCreationResult>
   
@@ -483,11 +817,11 @@ export interface UseProjectExecutionReturn {
  */
 export interface ProjectCreationFormEvents {
   'step-change': (newStep: number, oldStep: number) => void
-  'form-update': (formData: ProjectFormData) => void
+  'form-update': (formData: NewProjectFormData) => void
   'validation-change': (validationState: ProjectCreationState['validation']) => void
   'draft-save': (draft: ProjectCreationDraft) => void
   'draft-load': (draft: ProjectCreationDraft) => void
-  'execution-start': (formData: ProjectFormData) => void
+  'execution-start': (formData: NewProjectFormData) => void
   'execution-progress': (progress: ProgressEvent) => void
   'execution-complete': (result: ProjectCreationResult) => void
   'execution-error': (error: string) => void

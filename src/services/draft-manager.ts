@@ -4,7 +4,7 @@
  */
 
 import type {
-  ProjectFormData,
+  NewProjectFormData as ProjectFormData,
   ProjectCreationDraft,
   DraftMetadata,
   DraftRestorationOptions,
@@ -204,8 +204,8 @@ export class DraftManager {
             createdAt: now,
             updatedAt: now,
             lastAccessedAt: now,
-            title: options.title || formData.basics.name || 'Untitled Project',
-            description: options.description || formData.basics.description,
+            title: options.title || formData.generalInfo?.name || 'Untitled Project',
+            description: options.description || formData.generalInfo?.description,
             version: '2.0.0',
             versions: [version],
             size: 0,
@@ -552,14 +552,18 @@ export class DraftManager {
 
     // Count basics fields
     totalFields += 3 // name, description, type
-    if (formData.basics.name) filledFields++
-    if (formData.basics.description) filledFields++
-    if (formData.basics.type) filledFields++
+    if (formData.generalInfo?.name) filledFields++
+    if (formData.generalInfo?.description) filledFields++
+    if (formData.setupType?.setupType) filledFields++
 
     // Count database fields
-    totalFields += 2 // type, connectionString
-    if (formData.database.type !== 'none') filledFields++
-    if (formData.database.connectionString) filledFields++
+    totalFields += 1 // createNewDatabase or existingDatabase
+    if (
+      formData.databaseSelection?.createNewDatabase ||
+      formData.databaseSelection?.existingDatabase
+    ) {
+      filledFields++
+    }
 
     // Step progress (current step / total steps * 100)
     const stepProgress = (navigationState.currentStep / navigationState.totalSteps) * 100

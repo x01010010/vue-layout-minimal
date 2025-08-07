@@ -8,7 +8,7 @@
         color="primary"
         class="logo-placeholder"
       />
-      <span class="app-name">App Name</span>
+      <span class="app-name">DSS Garage</span>
     </div>
 
     <!-- Center Section: Application Title with Loading Demo -->

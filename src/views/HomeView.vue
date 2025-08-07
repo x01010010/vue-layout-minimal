@@ -1,24 +1,10 @@
 <template>
   <v-container>
-    <h1>Welcome to Vue Layout Minimal</h1>
-    <p>Vue 3 + Vuetify 3 + TypeScript project with layout structure complete!</p>
+    <h1>Data Superstore</h1>
+    
     <v-card class="mt-4">
-      <v-card-title>Layout Structure</v-card-title>
-      <v-card-text>
-        <p>This layout includes:</p>
-        <ul>
-          <li>Header with left, center, and right slots</li>
-          <li>Sidebar with top, menu, and bottom slots</li>
-          <li>Main content area with content slot</li>
-          <li>Footer with left, center, and right slots</li>
-        </ul>
-        <p class="mt-4">The main content area now features:</p>
-        <ul>
-          <li>Custom scrollable areas with styled scrollbars</li>
-          <li>Responsive layout that adapts to screen size</li>
-          <li>Smooth scrolling behavior</li>
-        </ul>
-      </v-card-text>
+      <v-card-title>More soon...</v-card-title>
+      
     </v-card>
   </v-container>
 </template>
